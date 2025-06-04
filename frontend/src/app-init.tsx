@@ -19,8 +19,14 @@ import {
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import theme from "./theme";
+import { useMemo } from "react";
+import { ExampleService } from "./services/example.service";
 
 function App() {
+  const exampleService = useMemo(function initExampleService() {
+    return new ExampleService();
+  }, []);
+
   return (
     <StyledEngineProvider injectFirst>
       <ThemeProvider theme={theme}>
@@ -84,7 +90,15 @@ function App() {
                     </Typography>
                   </CardContent>
                   <CardActions>
-                    <Button size="small">Inizia</Button>
+                    <Button
+                      size="small"
+                      onClick={async () => {
+                        const { message } = await exampleService.getMessage();
+                        alert(message);
+                      }}
+                    >
+                      Cliccami per fare una chiamata API
+                    </Button>
                   </CardActions>
                 </Card>
               </Grid>

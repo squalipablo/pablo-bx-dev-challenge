@@ -16,4 +16,13 @@ export default defineConfig({
       viewport: "initial-scale=1, width=device-width",
     },
   },
+  server: {
+    port: 3001,
+    proxy: {
+      "/api": {
+        target: "http://localhost:3000",
+        changeOrigin: true,
+      },
+    },
+  },
 });
