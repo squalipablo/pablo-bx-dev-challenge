@@ -3,8 +3,8 @@
   "packageManager": "yarn@4.9.2",
   "scripts": {
     "prepare": "husky",
-    "pre-commit": "yarn --cwd frontend lint",
-    "pre-push": "yarn --cwd frontend test"
+    "pre-commit": "yarn --cwd frontend lint && yarn --cwd backend lint",
+    "pre-push": "yarn --cwd frontend test && yarn --cwd backend test"
   },
   "devDependencies": {
     "husky": "^9.1.7"
