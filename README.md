@@ -1,1 +1,0 @@
-# bx-dev-interview-challenge
