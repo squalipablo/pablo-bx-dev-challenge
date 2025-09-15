@@ -12,7 +12,7 @@ async function bootstrap() {
     logger,
   });
 
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api/v1');
   app.useGlobalPipes(new ValidationPipe());
   app.enableCors({
     origin: '*',
@@ -21,9 +21,9 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const port = configService.get<number>('port') as number;
 
-  await app.listen(port, () => {
+  await app.listen(port, 'localhost', () => {
     logger.log(
-      `🚀 Bonusx File Uploader is running on: http://localhost:${port}`,
+      `Bonusx File Uploader is running on: http://localhost:${port}`,
     );
   });
 }

@@ -17,12 +17,21 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3001,
+    port: 5000,
+    host: "localhost",
     proxy: {
       "/api": {
         target: "http://localhost:3000",
         changeOrigin: true,
       },
+    },
+  },
+  dev: {
+    hmr: {
+      host: "localhost",
+    },
+    client: {
+      // Let the browser determine the WebSocket host to avoid proxy issues
     },
   },
 });

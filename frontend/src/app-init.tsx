@@ -6,26 +6,95 @@ import {
   AppBar,
   Box,
   Button,
-  Card,
-  CardActions,
-  CardContent,
   Container,
   CssBaseline,
-  Paper,
   StyledEngineProvider,
   ThemeProvider,
   Toolbar,
   Typography,
+  Alert,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import theme from "./theme";
-import { useMemo } from "react";
-import { ExampleService } from "./services/example.service";
+import { useMemo, useState, useEffect } from "react";
+import { FileService, UploadConfig } from "./services/file.service";
+import { FileUpload } from "./components/FileUpload";
+import { Login } from "./components/Login";
+import { AuthService, User } from "./services/auth.service";
 
 function App() {
-  const exampleService = useMemo(function initExampleService() {
-    return new ExampleService();
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [files, setFiles] = useState<Array<{
+    key: string;
+    originalname: string;
+    size: number;
+  }>>([]);
+  const [uploadConfig, setUploadConfig] = useState<UploadConfig | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
+
+  const fileService = useMemo(function initFileService() {
+    return new FileService();
   }, []);
+
+  const loadData = async () => {
+    if (!isLoggedIn) return;
+    
+    console.log('Loading data - starting API calls...');
+    setLoading(true);
+    setError('');
+    
+    try {
+      console.log('Fetching upload config...');
+      const configData = await fileService.getUploadConfig();
+      console.log('Upload config loaded:', configData);
+      
+      console.log('Fetching files list...');
+      const filesData = await fileService.getFiles();
+      console.log('Files list loaded:', filesData);
+      
+      setUploadConfig(configData);
+      setFiles(filesData);
+      console.log('Data loading completed successfully');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load data';
+      setError(errorMessage);
+      console.error('Failed to load data - Error details:', {
+        error: err,
+        message: errorMessage,
+        timestamp: new Date().toISOString()
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // Check if user is already logged in on app start
+    const currentUser = AuthService.getCurrentUser();
+    if (currentUser && currentUser.isLoggedIn) {
+      setUser(currentUser);
+      setIsLoggedIn(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      loadData();
+    }
+  }, [isLoggedIn]);
+
+  const handleLogin = (loggedInUser: User) => {
+    setUser(loggedInUser);
+    setIsLoggedIn(true);
+  };
+
+  const handleLogout = () => {
+    AuthService.logout();
+    setUser(null);
+    setIsLoggedIn(false);
+  };
 
   return (
     <StyledEngineProvider injectFirst>
@@ -37,88 +106,44 @@ function App() {
               <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
                 BonusX Interview Challenge
               </Typography>
-              <Button color="inherit">Login</Button>
+              {isLoggedIn ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Typography variant="body2">
+                    Ciao, {user?.username}!
+                  </Typography>
+                  <Button color="inherit" onClick={handleLogout}>
+                    Logout
+                  </Button>
+                </Box>
+              ) : (
+                <Typography variant="body2" color="inherit">
+                  Non autenticato
+                </Typography>
+              )}
             </Toolbar>
           </AppBar>
 
           <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
             <Grid container spacing={3}>
+            
               <Grid size={12}>
-                <Paper sx={{ p: 2, mb: 3 }}>
-                  <Typography variant="h4" gutterBottom>
-                    Benvenuto nell'applicazione
-                  </Typography>
-                  <Typography variant="body1" color="text.secondary">
-                    Questa è l'impostazione iniziale per l'app con Material-UI
-                    configurato correttamente.
-                  </Typography>
-                </Paper>
-              </Grid>
-
-              <Grid size={{ xs: 12, md: 6 }}>
-                <Card>
-                  <CardContent>
-                    <Typography variant="h5" component="div">
-                      Funzionalità 1
-                    </Typography>
-                    <Typography sx={{ mb: 1.5 }} color="text.secondary">
-                      Descrizione della prima funzionalità
-                    </Typography>
-                    <Typography variant="body2">
-                      Qui puoi aggiungere la tua prima funzionalità. Material-UI
-                      è ora configurato e funzionante.
-                    </Typography>
-                  </CardContent>
-                  <CardActions>
-                    <Button size="small">Scopri di più</Button>
-                  </CardActions>
-                </Card>
-              </Grid>
-
-              <Grid size={{ xs: 12, md: 6 }}>
-                <Card>
-                  <CardContent>
-                    <Typography variant="h5" component="div">
-                      Funzionalità 2
-                    </Typography>
-                    <Typography sx={{ mb: 1.5 }} color="text.secondary">
-                      Descrizione della seconda funzionalità
-                    </Typography>
-                    <Typography variant="body2">
-                      Qui puoi aggiungere la tua seconda funzionalità. Tutti i
-                      componenti Material-UI sono disponibili.
-                    </Typography>
-                  </CardContent>
-                  <CardActions>
-                    <Button
-                      size="small"
-                      onClick={async () => {
-                        const { message } = await exampleService.getMessage();
-                        alert(message);
-                      }}
-                    >
-                      Cliccami per fare una chiamata API
-                    </Button>
-                  </CardActions>
-                </Card>
-              </Grid>
-
-              <Grid size={12}>
-                <Paper sx={{ p: 2 }}>
-                  <Typography variant="h6" gutterBottom>
-                    Stato dell'applicazione
-                  </Typography>
-                  <Typography variant="body2">
-                    ✅ Material-UI configurato correttamente
-                    <br />
-                    ✅ Tema personalizzabile
-                    <br />
-                    ✅ Font Roboto caricato
-                    <br />
-                    ✅ Layout responsivo
-                    <br />✅ Componenti base implementati
-                  </Typography>
-                </Paper>
+                {isLoggedIn ? (
+                  <FileUpload 
+                    files={files}
+                    uploadConfig={uploadConfig}
+                    loading={loading}
+                    error={error}
+                    onFilesChange={setFiles}
+                    onRefresh={loadData}
+                  />
+                ) : (
+                  <>
+                    <Alert severity="info" sx={{ mb: 3 }}>
+                      Devi effettuare il login per accedere ai file e alle funzioni di upload.
+                    </Alert>
+                    <Login onLogin={handleLogin} />
+                  </>
+                )}
               </Grid>
             </Grid>
           </Container>
