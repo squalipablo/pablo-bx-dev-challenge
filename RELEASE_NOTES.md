@@ -11,6 +11,12 @@ Complete implementation of a full-stack application for file upload and download
 
 ---
 
+## Running instructions
+cd backend && yarn install
+yarn start:dev (port 5000)
+cd frontend && yarn install
+yarn start:dev (port 3000)
+
 ## Architectural Choices
 
 ### Storage Provider: Google Cloud Storage vs AWS S3
